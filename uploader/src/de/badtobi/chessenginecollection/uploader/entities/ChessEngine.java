@@ -12,6 +12,9 @@ public class ChessEngine {
     private String license;
     private String licenseUrl;
     private List<Version> versions = new ArrayList<Version>();
+    /**
+     * Id of the filesets to be also delivered with this binary.
+     */
     private List<String> additionalFiles = new ArrayList<String>();
 
     public String getName() {
@@ -48,6 +51,10 @@ public class ChessEngine {
 
     public List<Version> getVersions() {
         return versions;
+    }
+
+    public void addVersion(Version version) {
+        versions.add(version);
     }
 
     public void setVersions(List<Version> versions) {

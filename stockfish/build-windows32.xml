@@ -4,28 +4,19 @@
     <!-- output directory for temporary object files -->
     <property name="buildDir" value="target/windows32"/>
     <!-- output directory for the shared library -->
-    <property name="libsDir" value="../libs/windows32"/>
+    <property name="libsDir" value="bin/windows32"/>
     <!-- the name of the shared library -->
     <property name="libName" value="stockfish.exe"/>
     <!-- the jni header jniPlatform to use -->
     <property name="jniPlatform" value="win32"/>
     <!-- the compilerPrefix for the C & C++ compilers -->
-    <property name="compilerPrefix" value="i686-w64-mingw32-"/>
+    <property name="compilerPrefix" value=""/>
     <!--  the compilerSuffix for the C & C++ compilers -->
-    <property name="compilerSuffix" value=""/>
-
-    <!-- define gcc compiler, options and files to compile -->
-    <property name="gcc" value="${compilerPrefix}gcc${compilerSuffix}"/>
-    <property name="gcc-opts" value="-c -W -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m32 -std=c99"/>
-    <fileset id="gcc-files" dir="./">
-        <exclude name="target/"/>
-
-
-    </fileset>
+    <property name="compilerSuffix" value=".exe"/>
 
     <!-- define g++ compiler, options and files to compile -->
-    <property name="g++" value="${compilerPrefix}g++${compilerSuffix}"/>
-    <property name="g++-opts" value="-c -W -D_WIN32 -D_MSC_VER -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m32 -std=c++11"/>
+    <property name="g++" value="${compilerPrefix}clang++${compilerSuffix}"/>
+    <property name="g++-opts" value="-c -Wall -Wcast-qual -fno-exceptions -fno-rtti -std=c++11 -m32 -D_WIN32"/>
     <fileset id="g++-files" dir="./">
         <exclude name="target/"/>
         <include name="stockfish/benchmark.cpp"/>
@@ -48,13 +39,11 @@
         <include name="stockfish/uci.cpp"/>
         <include name="stockfish/ucioption.cpp"/>
         <include name="stockfish/syzygy/tbprobe.cpp"/>
-
-
     </fileset>
 
     <!-- define linker and options -->
-    <property name="linker" value="${compilerPrefix}g++${compilerSuffix}"/>
-    <property name="linker-opts" value="-Wl,--kill-at -m32 -static -static-libgcc -static-libstdc++"/>
+    <property name="linker" value="${compilerPrefix}clang++${compilerSuffix}"/>
+    <property name="linker-opts" value="-Wl,--kill-at -m32 -static"/>
     <property name="libraries" value=""/>
 
     <!-- cleans the build directory, removes all object files and shared libs -->
@@ -67,18 +56,11 @@
 
     <target name="precompile">
         <condition property="compiler-found">
-            <and>
                 <or>
                     <!-- Include both b/c Windows might be either -->
                     <available file="${g++}" filepath="${env.PATH}"/>
                     <available file="${g++}" filepath="${env.Path}"/>
                 </or>
-                <or>
-                    <!-- Include both b/c Windows might be either -->
-                    <available file="${gcc}" filepath="${env.PATH}"/>
-                    <available file="${gcc}" filepath="${env.Path}"/>
-                </or>
-            </and>
         </condition>
         <condition property="has-compiler">
             <equals arg1="${compiler-found}" arg2="true"/>
@@ -90,7 +72,6 @@
         <!-- FIXME this is pretty nasty :/ -->
         <copy todir="${buildDir}">
             <fileset refid="g++-files"/>
-            <fileset refid="gcc-files"/>
         </copy>
         <delete>
             <fileset dir="${buildDir}">
@@ -106,7 +87,6 @@
         <apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
             <arg line="${g++-opts}"/>
             <arg value="-I."/>
-            <arg value="-I/usr/i686-w64-mingw32/include/"/>
             <arg value="-Istockfish/syzygy"/>
             <arg value="-Istockfish"/>
 
@@ -117,22 +97,6 @@
             <compositemapper>
                 <mapper type="glob" from="*.cpp" to="*.o"/>
                 <mapper type="glob" from="*.mm" to="*.o"/>
-            </compositemapper>
-        </apply>
-        <apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
-            <arg line="${gcc-opts}"/>
-            <arg value="-I."/>
-            <arg value="-I/usr/i686-w64-mingw32/include/"/>
-            <arg value="-Istockfish/syzygy"/>
-            <arg value="-Istockfish"/>
-
-            <srcfile/>
-            <arg value="-o"/>
-            <targetfile/>
-            <fileset refid="gcc-files"/>
-            <compositemapper>
-                <mapper type="glob" from="*.c" to="*.o"/>
-                <mapper type="glob" from="*.m" to="*.o"/>
             </compositemapper>
         </apply>
     </target>

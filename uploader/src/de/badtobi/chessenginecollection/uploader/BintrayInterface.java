@@ -3,12 +3,11 @@ package de.badtobi.chessenginecollection.uploader;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import de.badtobi.chessenginecollection.uploader.entities.Index;
 
-import java.io.*;
+import java.io.File;
 import java.net.Authenticator;
-import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
-import java.net.URL;
 
 /**
  * Created by b4dt0bi on 08.08.16.
@@ -48,7 +47,8 @@ public class BintrayInterface {
                         .basicAuth(userName, apiKey)
                         .field("file", fileToUpload)
                         .asString();
-            } else {
+            }
+            else {
                 response = Unirest.put(getUploadUrl() + folder + filename)
                         .basicAuth(userName, apiKey)
                         .field("file", fileToUpload)
@@ -56,35 +56,22 @@ public class BintrayInterface {
             }
             System.out.println(response.getStatusText());
             return "Created".equals(response.getStatusText());
-        } catch (UnirestException e) {
+        }
+        catch (UnirestException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public String getFile(String name) {
-
-        InputStream is = null;
+    public Index getIndex() {
         try {
-            URL url = new URL(getDownloadUrl(name));
-            is = url.openStream();  // throws an IOException
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = br.readLine()) != null) {
-                System.out.println(line);
-            }
-        } catch (MalformedURLException mue) {
-            mue.printStackTrace();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            try {
-                if (is != null) is.close();
-            } catch (IOException ioe) {
-                // nothing to see here
-            }
+            HttpResponse<Index> json = Unirest.get(getDownloadUrl("engines.json")).asObject(Index.class);
+            return json.getBody();
         }
-        return "";
+        catch (UnirestException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void setup() {
